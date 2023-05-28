@@ -72,10 +72,10 @@ def get_impact():
     )
     system_ref = client.create_product_system(process_ref, config)
 
-    impact_methods = client.get_all(o.ImpactMethod)
+    impact_method = client.get(o.ImpactMethod,'787c02f1-d1f2-36d6-8e06-2307cc3ebebc')
     setup = o.CalculationSetup(
         target=system_ref,
-        impact_method=impact_methods[0],
+        impact_method=impact_method,
     )
     result = client.calculate(setup)
     result.wait_until_ready()
