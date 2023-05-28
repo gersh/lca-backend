@@ -1,0 +1,9 @@
+#myExtensionBadge {
+    padding: 10px;
+    margin-top: 10px;
+    color: white;
+    background-color: #3498db;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+}
