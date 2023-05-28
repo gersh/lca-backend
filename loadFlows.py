@@ -31,6 +31,7 @@ if __name__ == '__main__':
         names = list(flowInfo.keys())
         values = [flowInfo[x] for x in names]
         length = 2000
+        print("Adding " + str(len(flowInfo)) + " flows")
         for n in range(len(flowInfo)//length):
             collection.add(documents=list(names[(n*length):(n*length+length)]),ids=list(values[(n*length):(n*length+length)]))
         chroma_client.persist()

@@ -25,11 +25,8 @@ collection = chroma_client.get_collection(name="flow_collection",embedding_funct
     
 
 PROMPT = """You are an LCA analyst.
-Extract a list of flows. When data is not available, use your best guess to give exact numbers. Return the answer in JSON-array with the fields:
-- flowName: Name of flow
-- process: Description of how flow
-- location
-- Weight: in kg
+Return a descripton of the final flow for the product to calculate the LCA
+
 Product Info:
 ```
 <DESCRIPTION>
@@ -43,19 +40,21 @@ def get_flows(description):
         temperature=0, 
         max_tokens=2000)
     print(response)
-    return json.loads(response['choices'][0]['message']['content'])
+    return response['choices'][0]['message']['content']
 
 
 @app.route("/impact")
 def get_impact():
     product_desc = request.args.get('product_desc')
     flows = get_flows(product_desc)
-    q = collection.query(query_texts=[flows[0]['flowName']])
-    client = ipc.Client(port=8083)
+    q = collection.query(query_texts=[flows])
+    print(q)
+    client = ipc.Client(port=8081)
     n = 0
     while n < len(q['ids'][0]):
         oid = q['ids'][0][n]
         f = client.get(o.Flow, oid)
+        print(f)
         providers = client.get_providers(o.Ref(id=f.id))
         if len(providers) > 0:
             break
@@ -67,6 +66,7 @@ def get_impact():
     )
     system_ref = client.create_product_system(process_ref, config)
 
+    impact_methods = client.get_all(o.ImpactMethod)
     setup = o.CalculationSetup(
         target=system_ref,
         impact_method=impact_methods[0],
@@ -76,8 +76,8 @@ def get_impact():
     impacts = result.get_total_impacts()
     impact_json = []
     for i in impacts:
-        impact_json.append({'impact_category_name':i.impact_category.name,'amount':i.amount, 'unit':ri.impact_category.ref_unitef_unit})
-    return json_response(impact_json)
+        impact_json.append({'flow_name':f.name,'impact_category_name':i.impact_category.name,'amount':i.amount, 'unit':i.impact_category.ref_unit})
+    return json.dumps(impact_json)
 
 
 app.run(host='0.0.0.0', port=5001)
