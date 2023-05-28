@@ -9,6 +9,7 @@ from flask import request
 import os
 from flask_json import FlaskJSON, JsonError, json_response, as_json
 from chromadb.config import Settings
+import json
 
 openai.api_key= os.environ['OPENAI_API_KEY']
 
@@ -25,8 +26,12 @@ collection = chroma_client.get_collection(name="flow_collection",embedding_funct
     
 
 PROMPT = """You are an LCA analyst.
-Return a descripton of the final flow for the product to calculate the LCA
-
+You are an LCA analyst.
+Extract a list of flows. When data is not available, use your best guess to give exact numbers. Return the answer in JSON-format with the fields:
+- flowName: Name of flow
+- process: Description of how flow
+- location
+- Weight: in kg
 Product Info:
 ```
 <DESCRIPTION>
@@ -47,6 +52,7 @@ def get_flows(description):
 def get_impact():
     product_desc = request.args.get('product_desc')
     flows = get_flows(product_desc)
+    flow = json.loads(flows)[0]['flowName']
     q = collection.query(query_texts=[flows])
     print(q)
     client = ipc.Client(port=8081)
